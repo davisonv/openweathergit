@@ -1,3 +1,5 @@
+import os
+
 import requests
 from requests.exceptions import HTTPError
 
@@ -18,7 +20,7 @@ class OpenWeather:
     __init__(token)
         Initializes the OpenWeather class with the provided API token.
 
-    get_city_location(city, country=None, limit=5)
+    get_city_location(city, state=None, country=None, limit=5)
         Retrieves the geographical coordinates of a city.
 
     get_weather_forecast(
@@ -27,23 +29,18 @@ class OpenWeather:
         Retrieves the current weather forecast for a given location.
     """
 
-    def __init__(self, token):
+    def __init__(self):
         """
-        Initializes the OpenWeather class with the provided API token.
-
-        Parameters
-        ----------
-        token : str
-            The API token required for authentication.
+        Initializes the OpenWeather class with the API token from env.
 
         Returns
         -------
         None
         """
-        self.token = token
+        self.token = os.getenv('OPENWEATHER_KEY')
         self.base_url = 'http://api.openweathermap.org/'
 
-    def get_city_location(self, city, country=None, limit=5):
+    def get_city_location(self, city, state=None, country=None, limit=5):
         """
         Retrieves the geographical coordinates of a city.
 
@@ -51,6 +48,8 @@ class OpenWeather:
         ----------
         city : str
             The name of the city.
+        state : str, optional
+            The state code only for the US (default: None).
         country : str, optional
             The country code in  (default: None).
         limit : int, optional
@@ -66,7 +65,7 @@ class OpenWeather:
         url = f'{self.base_url}geo/1.0/direct'
 
         params = {
-            'q': f'{city},{country}',
+            'q': ','.join(filter(None, [city, state, country])),
             'limit': limit,
             'appid': self.token,
         }
@@ -75,7 +74,7 @@ class OpenWeather:
             response = requests.get(url, params)
 
             response.raise_for_status()
-
+            print(response.json())
             return response.json()
 
         except HTTPError as http_err:
@@ -84,7 +83,7 @@ class OpenWeather:
             return {'error': str(err)}
 
     def get_weather_forecast(
-        self, latitude, longitude, units='metric', lang='pt_br', exclude=None
+        self, latitude, longitude, units='metric', lang='pt_br'
     ):
         """
         Retrieves the current weather forecast for a given location.
@@ -99,8 +98,6 @@ class OpenWeather:
             The units for temperature (default: metric).
         lang : str, optional
             The language for the api response. (default: pt_br)
-        exclude : str, optional
-            The types of data to exclude from the response (default: None).
 
         Returns
         -------
@@ -114,7 +111,6 @@ class OpenWeather:
             'lon': longitude,
             'units': units,
             'lang': lang,
-            'exclude': exclude,
             'appid': self.token,
         }
 
