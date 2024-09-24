@@ -20,8 +20,9 @@ def get_city_location(
     city: str, state: str = None, country: str = None, limit: int = 5
 ):
     opw = OpenWeather()
-    response = opw.get_city_location(city, state, country, limit=limit)
-    return {'locations': response}
+    cities = opw.get_city_location(city, state, country, limit=limit)
+    
+    return {'locations': cities}
 
 
 @app.get('/get-weather-forecast', response_model=Message)
@@ -40,16 +41,15 @@ def get_weather_forecast(
         lang,
     )
 
-    city = response['city']['name']
-    current_forecast = response['list'][0]
-    current_temp = current_forecast['main']['temp']
+    city = response.city.name
+    current_forecast = response.list[0]
+    current_temp = current_forecast.main.temp
     if current_temp.is_integer():
         current_temp = int(current_temp)
-    current_weather = weather_translator(
-        current_forecast['weather'][0]['main']
-    )
+    current_weather = current_forecast.weather[0].description
+  
     current_formated_date = format_datetime_into_date(
-        current_forecast['dt_txt'], '%Y-%m-%d %H:%M:%S', '%d/%m'
+        current_forecast.dt_txt, '%Y-%m-%d %H:%M:%S', '%d/%m'
     )
 
     current_forecast_text = (
@@ -59,11 +59,12 @@ def get_weather_forecast(
 
     temps_by_day = defaultdict(list)
 
-    for forecast in response['list'][1:]:
+    for forecast in response.list:
         date = format_datetime_into_date(
-            forecast['dt_txt'], '%Y-%m-%d %H:%M:%S', '%d/%m'
+            forecast.dt_txt, '%Y-%m-%d %H:%M:%S', '%d/%m'
         )
-        temps_by_day[date].append(forecast['main']['temp'])
+        if date != current_formated_date:
+            temps_by_day[date].append(forecast.main.temp)
 
     next_days_forecast_text = 'Média para os próximos dias: '
 

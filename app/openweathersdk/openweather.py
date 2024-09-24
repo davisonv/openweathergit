@@ -1,7 +1,83 @@
 import os
-
 import requests
+from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError
+from typing import Optional, List, Dict, Union
+
+from app.schemas import CityLocation
+
+
+class City(CityLocation):
+    pass
+
+class WeatherMain(BaseModel):
+    temp: float
+    feels_like: float
+    temp_min: float
+    temp_max: float
+    pressure: int
+    sea_level: Optional[int]
+    grnd_level: Optional[int]
+    humidity: int
+    temp_kf: Optional[float]
+
+
+class WeatherDescription(BaseModel):
+    id: int
+    main: str
+    description: str
+    icon: str
+
+
+class Clouds(BaseModel):
+    all: int
+
+
+class Wind(BaseModel):
+    speed: float
+    deg: int
+    gust: Optional[float]
+
+
+class Sys(BaseModel):
+    pod: str
+
+
+class WeatherData(BaseModel):
+    dt: int
+    main: WeatherMain
+    weather: List[WeatherDescription]
+    clouds: Clouds
+    wind: Wind
+    visibility: int
+    pop: float
+    rain: Optional[Dict[str, float]] = None
+    sys: Sys
+    dt_txt: str
+
+
+class Coord(BaseModel):
+    lat: float
+    lon: float
+
+
+class WeatherForecastCityInfo(BaseModel):
+    id: int
+    name: str
+    coord: Coord
+    country: str
+    population: int
+    timezone: int
+    sunrise: int
+    sunset: int
+
+
+class WeatherForecast(BaseModel):
+    cod: str
+    message: Union[int, str]
+    cnt: int
+    list: List[WeatherData]
+    city: WeatherForecastCityInfo
 
 
 class OpenWeather:
@@ -37,10 +113,10 @@ class OpenWeather:
         -------
         None
         """
-        self.token = os.getenv('OPENWEATHER_KEY')
-        self.base_url = 'http://api.openweathermap.org/'
+        self.__token = os.getenv('OPENWEATHER_KEY')
+        self.__base_url = 'http://api.openweathermap.org/'
 
-    def get_city_location(self, city, state=None, country=None, limit=5):
+    def get_city_location(self, city, state=None, country=None, limit=5) -> list[City]:
         """
         Retrieves the geographical coordinates of a city.
 
@@ -62,20 +138,20 @@ class OpenWeather:
         coordinates of a city named the same as the given param city.
 
         """
-        url = f'{self.base_url}geo/1.0/direct'
+        url = f'{self.__base_url}geo/1.0/direct'
 
         params = {
             'q': ','.join(filter(None, [city, state, country])),
             'limit': limit,
-            'appid': self.token,
+            'appid': self.__token,
         }
 
         try:
             response = requests.get(url, params)
 
             response.raise_for_status()
-            print(response.json())
-            return response.json()
+            data = response.json()
+            return [City(**location) for location in data]
 
         except HTTPError as http_err:
             return {'error': str(http_err)}
@@ -104,14 +180,14 @@ class OpenWeather:
         dict
             A dictionary containing the current weather forecast.
         """
-        url = f'{self.base_url}data/2.5/forecast'
+        url = f'{self.__base_url}data/2.5/forecast'
 
         params = {
             'lat': latitude,
             'lon': longitude,
             'units': units,
             'lang': lang,
-            'appid': self.token,
+            'appid': self.__token,
         }
 
         try:
@@ -119,8 +195,8 @@ class OpenWeather:
 
             response.raise_for_status()
 
-            data = response.json()
-            return data
+            forecast_data = WeatherForecast(**response.json())
+            return forecast_data
 
         except HTTPError as http_err:
             return {'error': str(http_err)}
