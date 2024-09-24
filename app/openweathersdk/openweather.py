@@ -131,9 +131,9 @@ class OpenWeather:
         state : str, optional
             The state code only for the US (default: None).
         country : str, optional
-            The country code in  (default: None).
+            The country code in ISO standard (default: None).
         limit : int, optional
-            The maximum number of results to return
+            The maximum number of results to return (default: 5).
 
         Returns
         -------
@@ -158,9 +158,9 @@ class OpenWeather:
             return [City(**location) for location in data]
 
         except HTTPError as http_err:
-            return {'error': str(http_err)}
+            raise HTTPError({'error': str(http_err)})
         except Exception as err:
-            return {'error': str(err)}
+            raise Exception({'error': str(err)})
 
     def get_weather_forecast(
         self, latitude, longitude, units='metric', lang='pt_br'
@@ -203,9 +203,9 @@ class OpenWeather:
             return forecast_data
 
         except HTTPError as http_err:
-            return {'error': str(http_err)}
+            raise HTTPError({'error': str(http_err)})
         except Exception as err:
-            return {'error': str(err)}
+            raise Exception({'error': str(err)})
 
     def get_temperature_scale(self, units: str) -> tuple[str, str]:
         """
