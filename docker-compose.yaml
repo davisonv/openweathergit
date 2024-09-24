@@ -1,0 +1,9 @@
+services:
+  fastapi_app:
+    image: fastapi_app
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      GITHUB_KEY: Y0urK3yHer3
+      OPENWEATHER_KEY: Y0urK3yHer3Too

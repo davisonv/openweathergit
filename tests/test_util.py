@@ -9,13 +9,9 @@ from app.util import create_gist, format_datetime_into_date
 @pytest.mark.parametrize(
     'date, input_format, output_format, expected',
     [
-        # Testando conversão de string com formato de entrada e saída diferentes
         ('2024-09-24 15:00:00', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y', '24/09/2024'),
-        # Testando outro formato de saída
         ('2024-09-24 15:00:00', '%Y-%m-%d %H:%M:%S', '%d/%m', '24/09'),
-        # Testando conversão de objeto datetime
         (datetime(2024, 9, 24, 15, 0), '', '%d/%m/%Y', '24/09/2024'),
-        # Testando outro objeto datetime
         (datetime(2024, 9, 24, 15, 0), '', '%d/%m', '24/09'),
     ],
 )
