@@ -7,9 +7,8 @@ from fastapi import FastAPI
 from app.openweathersdk.openweather import OpenWeather
 from app.schemas import ListCityLocation, Message
 from app.util import (
+    create_gist,
     format_datetime_into_date,
-    get_or_create_gist,
-    weather_translator,
 )
 
 app = FastAPI()
@@ -21,7 +20,7 @@ def get_city_location(
 ):
     opw = OpenWeather()
     cities = opw.get_city_location(city, state, country, limit=limit)
-    
+
     return {'locations': cities}
 
 
@@ -41,19 +40,21 @@ def get_weather_forecast(
         lang,
     )
 
+    scale, symbol = opw.get_temperature_scale(units)
+
     city = response.city.name
     current_forecast = response.list[0]
     current_temp = current_forecast.main.temp
     if current_temp.is_integer():
         current_temp = int(current_temp)
     current_weather = current_forecast.weather[0].description
-  
+
     current_formated_date = format_datetime_into_date(
         current_forecast.dt_txt, '%Y-%m-%d %H:%M:%S', '%d/%m'
     )
 
     current_forecast_text = (
-        f'{current_temp}°C e {current_weather} em {city} '
+        f'{current_temp}{symbol} e {current_weather} em {city} '
         f'em {current_formated_date}. '
     )
 
@@ -70,11 +71,11 @@ def get_weather_forecast(
 
     for date, temps in temps_by_day.items():
         avg_temp = mean(temps)
-        next_days_forecast_text += f'{int(avg_temp)}°C em {date}, '
+        next_days_forecast_text += f'{int(avg_temp)}{symbol} em {date}, '
 
     next_days_forecast_text = next_days_forecast_text.rstrip(', ') + '.'
 
-    gist_url = get_or_create_gist(
+    gist_url = create_gist(
         token=os.getenv('GITHUB_KEY'),
         gist_name=gist_name,
         content=current_forecast_text + next_days_forecast_text,

@@ -39,6 +39,7 @@ format = 'ruff check . --fix; ruff format .'
 run = 'fastapi dev app/app.py'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=app -vv'
+debug_test = 'pytest -s -x --cov=app -vv --pdb'
 post_test = 'coverage html'
 
 [build-system]

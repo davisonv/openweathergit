@@ -1,14 +1,16 @@
 import os
+from typing import Dict, List, Optional, Union
+
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from requests.exceptions import HTTPError
-from typing import Optional, List, Dict, Union
 
 from app.schemas import CityLocation
 
 
 class City(CityLocation):
     pass
+
 
 class WeatherMain(BaseModel):
     temp: float
@@ -116,7 +118,9 @@ class OpenWeather:
         self.__token = os.getenv('OPENWEATHER_KEY')
         self.__base_url = 'http://api.openweathermap.org/'
 
-    def get_city_location(self, city, state=None, country=None, limit=5) -> list[City]:
+    def get_city_location(
+        self, city, state=None, country=None, limit=5
+    ) -> list[City]:
         """
         Retrieves the geographical coordinates of a city.
 
@@ -160,7 +164,7 @@ class OpenWeather:
 
     def get_weather_forecast(
         self, latitude, longitude, units='metric', lang='pt_br'
-    ):
+    ) -> WeatherForecast:
         """
         Retrieves the current weather forecast for a given location.
 
@@ -202,3 +206,29 @@ class OpenWeather:
             return {'error': str(http_err)}
         except Exception as err:
             return {'error': str(err)}
+
+    def get_temperature_scale(self, units: str) -> tuple[str, str]:
+        """
+        Returns the corresponding temperature scale and its symbol based on the
+        given units.
+
+        Parameters:
+        -----------
+        units : str
+            The units for temperature. It can be either 'metric', 'imperial', or
+            any other value.
+
+        Returns:
+        --------
+        tuple[str, str]
+            A tuple containing the temperature scale name and its symbol.
+            If the units are 'metric', it returns ('Celsius', '°C').
+            If the units are 'imperial', it returns ('Fahrenheit', '°F').
+            For any other value, it returns ('Kelvin', 'K').
+        """
+        if units == 'metric':
+            return ('Celsius', '°C')
+        elif units == 'imperial':
+            return ('Fahrenheit', '°F')
+        else:
+            return ('Kelvin', 'K')
